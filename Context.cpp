@@ -8,6 +8,8 @@
 
 #include "Context.h"
 #include <cmath>
+#include <iostream>
+#include <ostream>
 
 /**
 * @brief Actualise le contexte de la simulation après un certain pas temporel en appelant chacun des méthodes ci-dessous.
@@ -17,6 +19,7 @@ void Context::updatePhysicalSystem(float dt){
     applyExternalForce(dt);
     updateExpectedPosition(dt);
     addStaticContactConstraints();
+    addDynamicContactConstraints();
     projectConstraints();
     deleteContactConstraints();
     applyFriction();
@@ -29,8 +32,8 @@ void Context::updatePhysicalSystem(float dt){
 */
 void Context::applyExternalForce(float dt){
     for (particle &p : particles) {
-        p.velocity[0]+=champ_de_force[0]*dt;
-        p.velocity[1]+=champ_de_force[1]*dt;
+        p.future_velocity[0]=p.velocity[0]+champ_de_force[0]*dt;
+        p.future_velocity[1]=p.velocity[1]+champ_de_force[1]*dt;
     }
 };
 
@@ -40,8 +43,8 @@ void Context::applyExternalForce(float dt){
 */
 void Context::updateExpectedPosition(float dt){
     for (particle &p : particles) {
-        p.future_pos[0]=p.pos[0]+p.velocity[0]*dt;
-        p.future_pos[1]=p.pos[1]+p.velocity[1]*dt;
+        p.future_pos[0]=p.pos[0]+p.future_velocity[0]*dt;
+        p.future_pos[1]=p.pos[1]+p.future_velocity[1]*dt;
     }
 };
 
@@ -60,6 +63,8 @@ void Context::addStaticContactConstraints(){
 
 /**
 * @brief Résoud les effets d'une contrainte statique en mettant à jour la nouvelle position future au niveau du point d'impact et la vitesse comme un rebond sur le collider
+* @param constraint Une contrainte statique à résoudre
+* @param particle La particule sur laquelle s'applique la contrainte, qui doit être la même que dans la contrainte
 */
 void enforceStaticGroundConstraint(const StaticConstraint& constraint,particle& particle){
 
@@ -67,64 +72,101 @@ void enforceStaticGroundConstraint(const StaticConstraint& constraint,particle& 
     const std::pair<double,double>& contactPoint=constraint.pt_impact;
 
     double r=particle.radius;
-    double p_sca = particle.velocity[0]*normal[0]+particle.velocity[1]*normal[1];
+    double p_sca = particle.future_velocity[0]*normal[0]+particle.future_velocity[1]*normal[1];
 
     particle.future_pos={contactPoint.first+normal[0]*r,contactPoint.second+normal[1]*r};
-    particle.velocity={particle.velocity[0]-2*p_sca*normal[0],particle.velocity[1]-2*p_sca*normal[1]};
+    particle.future_velocity={particle.future_velocity[0]-2*p_sca*normal[0],particle.future_velocity[1]-2*p_sca*normal[1]};
+}
+
+/**
+* @brief Ajoute des contraintes dynamiques si un contact entre deux particules est détecté
+*/
+void Context::addDynamicContactConstraints() {
+    // Parcourir toutes les combinaisons de particules
+    for (int i=0;i<particles.size();++i) {
+        particle &p1= particles[i];
+        for (int j=i+1;j<particles.size();++j) {
+            particle &p2 = particles[j];
+
+            // Calculer la distance entre les deux particules
+            double deltaX=p2.future_pos[0]-p1.future_pos[0];
+            double deltaY=p2.future_pos[1]-p1.future_pos[1];
+            double distance=std::sqrt(deltaX*deltaX+deltaY*deltaY);
+
+            // Vérifier si elles se chevauchent (collision)
+            if (distance<p1.radius+p2.radius) {
+                // Ajouter une contrainte dynamique
+                std::pair<double, double> impact_point = {p1.future_pos[0]+deltaX*(p1.radius/distance),p1.future_pos[1]+deltaY*(p1.radius/distance)};
+                DynamicConstraint constraint = {impact_point, p1, p2};
+                D_Constraints.push_back(constraint);
+            }
+        }
+    }
+}
+
+/**
+* @brief Résoud les effets d'une contrainte dynamique en mettant à jour la vitesse comme un rebond sur l'autre particule
+* @param constraint Une contrainte dynamique à résoudre
+* @param particle La particule sur laquelle s'applique la contrainte, qui doit être la même que l'une des deux particules de la contrainte
+*/
+void enforcedynamicConstraint(const DynamicConstraint& constraint,particle& Particle){
+
+    auto& p1 = constraint.part1;
+    auto& p2 = constraint.part2;
+
+    double deltaX = p2.future_pos[0] - p1.future_pos[0];
+    double deltaY = p2.future_pos[1] - p1.future_pos[1];
+    double distance = std::sqrt(deltaX * deltaX + deltaY * deltaY);
+    std::vector<double> normal = {deltaX / distance, deltaY / distance};
+
+    particle contact_particle;
+    if (Particle==p1){contact_particle=p2;}else{contact_particle=p1;}
+
+    // Echange des vitesses en norme et rebond
+    double p_sca=(contact_particle.future_velocity[0]-Particle.future_velocity[0])*normal[0]+(contact_particle.future_velocity[1]-Particle.future_velocity[1])*normal[1];
+    Particle.future_velocity[0]+=p_sca*normal[0];
+    Particle.future_velocity[1]+=p_sca*normal[1];
+
+    // On écarte la particule de l'autre
+    double dist_dep=(p1.radius+p2.radius-distance)/2;
+    int sign=1;
+    if (Particle==p1){sign=-1;}
+    Particle.future_pos[0]+=sign*dist_dep*normal[0];
+    Particle.future_pos[1]+=sign*dist_dep*normal[0];
 }
 
 /**
 * @brief Résoud toutes les contraintes (statiques, entre particule, avec les bords)
 */
 void Context::projectConstraints(){
-
     // On procède particule par particule
     for (int i=0;i<particles.size();i++){
         particle &p=particles[i];
 
-        // Premièrement, les interactions avec les colliders (s'il y a)
-        // Cet ordre permet de s'assurer que les contraintes statiques soient appliquées avant qu'une modification d'une particule
-        // depuis la méthode addStaticContactConstraints empêche la détection d'une contrainte à appliquer.
+        // Interactions avec les colliders statiques
         for (StaticConstraint &sc:S_Constraints){
             if (sc.part==p){enforceStaticGroundConstraint(sc,p);}
         }
-
-        // Ensuite, les interactions entre particules
-            // On s'assure ici qu'on ne compte pas 2 fois une même interaction
-            for (int j=i+1;j<particles.size();j++){
-            particle &p2=particles[j];
-            double deltaX=p.future_pos[0]-p2.future_pos[0];
-            double deltaY=p.future_pos[1]-p2.future_pos[1];
-            double distance=std::sqrt(deltaX*deltaX+deltaY*deltaY);
-            if (distance<p.radius+p2.radius){
-                // Echange simple des vitesses...
-                std::swap(p.velocity,p2.velocity);
-                // ...et petit décalage pour éviter la superposition
-                int horizontal=(deltaX>0)*2-1;
-                int vertical=(deltaY>0)*2-1;
-                p.future_pos[0]+=horizontal;
-                p.future_pos[1]+=vertical;
-                p2.future_pos[0]-=horizontal;
-                p2.future_pos[1]-=vertical;
-            }
+        // Interactions entre les particules
+        for (DynamicConstraint &dc:D_Constraints){
+            if (dc.part1==p || dc.part2==p){enforcedynamicConstraint(dc,p);}
         }
-
-        // Enfin, les interactions avec les bords (fonctionnent comme des colliders (plus simples))
+        // Interactions avec les bords (fonctionnent comme des colliders (plus simples et s'adaptent à la taille de la fenêtre))
         if (p.future_pos[1]>=height-10-p.radius){
              p.future_pos[1]=height-10-p.radius;
-             p.velocity[1]=-p.velocity[1];
+             p.future_velocity[1]=-p.future_velocity[1];
         }
         if (p.future_pos[1]<=10+p.radius){
             p.future_pos[1]=10+p.radius;
-            p.velocity[1]=-p.velocity[1];
+            p.future_velocity[1]=-p.future_velocity[1];
         }
         if (p.future_pos[0]>=width-10-p.radius){
             p.future_pos[0]=width-10-p.radius;
-            p.velocity[0]=-p.velocity[0];
+            p.future_velocity[0]=-p.future_velocity[0];
         }
         if (p.future_pos[0]<=10+p.radius){
             p.future_pos[0]=10+p.radius;
-            p.velocity[0]=-p.velocity[0];
+            p.future_velocity[0]=-p.future_velocity[0];
         }
     }
 }
@@ -134,8 +176,8 @@ void Context::projectConstraints(){
 */
 void Context::applyFriction(){
     for (particle &p:particles){
-        p.velocity[0]-=alpha*p.velocity[0];
-        p.velocity[1]-=alpha*p.velocity[1];
+        p.future_velocity[0]-=alpha*p.future_velocity[0];
+        p.future_velocity[1]-=alpha*p.future_velocity[1];
     }
 };
 
@@ -144,6 +186,7 @@ void Context::applyFriction(){
 */
 void Context::deleteContactConstraints(){
     S_Constraints.clear();
+    D_Constraints.clear();
 };
 
 
@@ -155,8 +198,6 @@ void Context::deleteContactConstraints(){
 void Context::updateVelocityAndPosition(float dt){
     for (particle &p : particles) {
         p.pos=p.future_pos;
+        p.velocity=p.future_velocity;
     }
 };
-
-/* Non implémentée:
-void Context::addDynamicContactConstraints(float dt){};*/

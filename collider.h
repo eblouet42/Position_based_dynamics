@@ -21,12 +21,14 @@
  *
  * Cette structure contient la position actuelle,
  * la position future prédite (qui change à chaque force appliquée à chaque itération),
+ * la vitesse_future prédite (qui change aussi régulièrement)
  * la vitesse,le rayon et enfin la masse de la particule.
  */
 struct particle {
     std::vector<double> pos; /**< Position actuelle de la particule. */
     std::vector<double> future_pos; /**< Position future calculée de la particule. */
     std::vector<double> velocity; /**< Vitesse actuelle de la particule. */
+    std::vector<double> future_velocity; /**< Vitesse future calculée de la particule. */
     double radius; /**< Rayon de la particule. */
     double mass; /**< Masse de la particule. */
 
@@ -36,7 +38,7 @@ struct particle {
      * @return true si les particules sont égales, false sinon.
      */
     bool operator==(const particle& other) const {
-        return pos==other.pos && future_pos==other.future_pos && velocity==other.velocity && radius==other.radius && mass==other.mass;}
+        return pos==other.pos && velocity==other.velocity && radius==other.radius && mass==other.mass;}
 };
 
 /**
@@ -52,6 +54,12 @@ struct StaticConstraint {
     std::pair<double, double> pt_impact; /**< Point d'impact de la collision. */
     std::vector<double> normal; /**< Normale de la collision. */
     particle part; /**< Particule impliquée dans la collision. */
+};
+
+struct DynamicConstraint {
+    std::pair<double,double> pt_impact; /**< Point d'impact de la collision. */
+    particle part1; /**< Première particule impliquée dans la collision. */
+    particle part2; /**< Seconde particule impliquée dans la collision. */
 };
 
 /**
