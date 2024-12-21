@@ -28,7 +28,7 @@ public:
     std::vector<particle> particles; /**< Vecteur de particules */
     std::vector<std::shared_ptr<collider>> colliders; /**< Vecteur de colliders. L'ampoul magique a forcé l'utilisation de shared_ptr: à expliquer... */
     std::vector<double> champ_de_force; /**< Vecteur représentant un champ de force */
-    double alpha; /**< Coefficient de frottement dynamique*/
+    double alpha; /**< Coefficient de frottement linéaire*/
     std::vector<StaticConstraint> S_Constraints; /**< Vecteur contenant les contraintes statiques ajoutées lors de la méthode addStaticContactConstraints pour les utiliser dans la méthode enforceStaticGroundConstraint du fichier context.cpp */
     std::vector<DynamicConstraint> D_Constraints; /**< Vecteur contenant les contraintes dynamiques ajoutées lors de la méthode addDynamicContactConstraints pour les utiliser dans la méthode enforceDynamicGroundConstraint du fichier context.cpp */
     int width; /**< Largeur de l'environnement*/
@@ -37,7 +37,7 @@ public:
     /**
      * @brief Constructeur par défaut.
      */
-    Context(){particles={},colliders={},champ_de_force={0,0},alpha=0.003,S_Constraints={},D_Constraints={},width=0,height=0;}
+    Context(){particles={},colliders={},champ_de_force={0,0},alpha=0,S_Constraints={},D_Constraints={},width=0,height=0;}
 
     /**
      * @brief Méthode pour ajouter un collider au vecteur de colliders.

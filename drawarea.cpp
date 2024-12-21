@@ -140,7 +140,7 @@ void DrawArea::mouseDoubleClickEvent(QMouseEvent *event) {
     context.width=this->width();
     context.height=this->height();
     context.champ_de_force={0,gravity};
-
+    context.alpha=alpha;
     // Méthode magique qui fait que toutes les méthodes se relancent
     update();
 }
