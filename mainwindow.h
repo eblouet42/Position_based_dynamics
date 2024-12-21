@@ -1,6 +1,6 @@
 /******************************************************************************
- * \file mainwindow.h
- * \brief Définition de la classe MainWindow.h qui hérite de QMainWindow
+ * @file mainwindow.h
+ * @brief Définition de la classe MainWindow.h qui hérite de QMainWindow
  *
  *
  * Ce fichier définit l'interface utilisateur de l'application et le cadre de la simulation.
@@ -19,8 +19,8 @@ class MainWindow;
 QT_END_NAMESPACE
 
 /**
- * \class MainWindow
- * \brief Classe pour représenter la fenêtre de l'application
+ * @class MainWindow
+ * @brief Classe pour représenter la fenêtre de l'application
  *
  * Cette classe l'architecture de la fenêtre de l'application avec une partie UI et une partie simulation
  */
@@ -30,12 +30,12 @@ class MainWindow : public QMainWindow
 
 public:
     /**
-    * \brief Constructeur de MainWindow par défaut.
+    * @brief Constructeur de MainWindow par défaut.
     */
     MainWindow(QWidget *parent = nullptr);
 
     /**
-    * \brief Destructeur de MainWindow par défaut.
+    * @brief Destructeur de MainWindow par défaut.
     */
     ~MainWindow();
 

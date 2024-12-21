@@ -1,6 +1,6 @@
 /******************************************************************************
- * \file drawaerea.cpp
- * \brief Implémentation des méthodes de la classe DrawArea utilisées pour actualiser l'interface utilisateur de la simulation
+ * @file drawaerea.cpp
+ * @brief Implémentation des méthodes de la classe DrawArea utilisées pour actualiser l'interface utilisateur de la simulation
  *
  *
  * Ce fichier implémente les méthodes définies dans le fichier drawarea.h
@@ -12,7 +12,7 @@
 #include <QMouseEvent>
 
 /**
-* \brief Constructeur par défaut "explicite".
+* @brief Constructeur par défaut "explicite".
 * Relie le timeout du timer à la méthode animate sur le DrawArea
 * Définit aussi les colliders présent dès le départ
 */
@@ -21,11 +21,6 @@ DrawArea::DrawArea(QWidget *parent)
     // On lie le timeout du timer à la méthode animate sur le DrawArea
     connect(timer, &QTimer::timeout, this, &DrawArea::animate);
     timer->start(20);
-
-    // On définit quelques caractéristiquees de la simulation ici
-    context.width=this->width();
-    context.height=this->height();
-    context.champ_de_force={0,gravity};
 
     // On peut ici initialiser des colliders dans l'environnement de la simulation
 
@@ -72,8 +67,8 @@ DrawArea::DrawArea(QWidget *parent)
 }
 
 /**
-* \brief Actualise la représentation à l'aide du contexte
-* \param e Un QPaintEvent pour dessiner les particules et les colliders, ainsi que les bords de la simulation
+* @brief Actualise la représentation à l'aide du contexte
+* @param e Un QPaintEvent pour dessiner les particules et les colliders, ainsi que les bords de la simulation
 */
 void DrawArea::paintEvent(QPaintEvent *e) {
     QPainter p(this);
@@ -104,6 +99,7 @@ void DrawArea::paintEvent(QPaintEvent *e) {
 
     // Dessin des colliders
     p.setPen(Qt::blue);
+    p.setBrush(QBrush(Qt::black));
 
     for (const auto& colliderPtr : context.colliders) {
         // std::dynamic_pointer_cast pour vérifier si le colliderPtr peut être cast en plancollider ou non
@@ -126,8 +122,8 @@ void DrawArea::paintEvent(QPaintEvent *e) {
 }
 
 /**
-* \brief Actualise le contexte (la liste de particule) lors d'un clic pour ajouter une particule à l'endroit du clic
-* \param event Un QMouseEvent pour récupérer la position du clic
+* @brief Actualise le contexte (la liste de particule) lors d'un clic pour ajouter une particule à l'endroit du clic
+* @param event Un QMouseEvent pour récupérer la position du clic
 */
 void DrawArea::mouseDoubleClickEvent(QMouseEvent *event) {
     particle newParticle;
@@ -138,13 +134,21 @@ void DrawArea::mouseDoubleClickEvent(QMouseEvent *event) {
     newParticle.radius=radius;
     newParticle.mass=2;
     context.particles.push_back(newParticle);
+
+    // On définit quelques caractéristiquees de la simulation ici, à chaque clic pour s'adapter à des variations de la fenêtre de simulation par l'utilisateur
+    context.width=this->width();
+    context.height=this->height();
+    context.champ_de_force={0,gravity};
+
+    // Méthode magique qui fait que toutes les méthodes se relancent
     update();
 }
 
 /**
-* \brief Actualise le contexte après un certain pas de temps à l'aide de la méthode updatePhysicalSystem de Context.h
+* @brief Actualise le contexte après un certain pas de temps à l'aide de la méthode updatePhysicalSystem de Context.h
 */
 void DrawArea::animate() {
     context.updatePhysicalSystem(((double) timer->interval())/100);
+    // Méthode magique qui fait que toutes les méthodes se relancent
     update();
 }
