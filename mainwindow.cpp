@@ -1,9 +1,14 @@
+/******************************************************************************
+ * @file mainwindow.cpp
+ * @brief Implémente les méthodes définies dans le fichier mainwindow.h
+ ******************************************************************************/
+
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include "drawarea.h"
 
 /**
-* \brief Constructeur de MainWindow par défaut.
+* @brief Constructeur de MainWindow par défaut.
 */
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -20,7 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 /**
-* \brief Destructeur de MainWindow par défaut.
+* @brief Destructeur de MainWindow par défaut.
 */
 MainWindow::~MainWindow()
 {

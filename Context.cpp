@@ -1,6 +1,6 @@
 /******************************************************************************
- * \file context.cpp
- * \brief Définition des méthodes de la classe context définies dans le header context.h
+ * @file context.cpp
+ * @brief Définition des méthodes de la classe context définies dans le header context.h
  *
  * Ce fichier définit l'action d'un champ de force sur les particules et les intéractions
  * des particules au contact d'un obstacle statique ou d'une autre particule.
@@ -10,20 +10,22 @@
 #include <cmath>
 
 /**
-* \brief Actualise le contexte de la simulation après un certain pas temporel en appelant chacun des méthodes ci-dessous.
-* \param dt Le pas temporel de la simulation
+* @brief Actualise le contexte de la simulation après un certain pas temporel en appelant chacun des méthodes ci-dessous.
+* @param dt Le pas temporel de la simulation
 */
 void Context::updatePhysicalSystem(float dt){
     applyExternalForce(dt);
     updateExpectedPosition(dt);
     addStaticContactConstraints();
     projectConstraints();
+    deleteContactConstraints();
+    applyFriction();
     updateVelocityAndPosition(dt);
 }
 
 /**
-* \brief Applique les forces extérieures comme le champ de force au système de particules en mettant à jour leurs vitesses
-* \param dt Le pas temporel de la simulation
+* @brief Applique les forces extérieures comme le champ de force au système de particules en mettant à jour leurs vitesses
+* @param dt Le pas temporel de la simulation
 */
 void Context::applyExternalForce(float dt){
     for (particle &p : particles) {
@@ -33,8 +35,8 @@ void Context::applyExternalForce(float dt){
 };
 
 /**
-* \brief Met à jour les positions des particules après un pas de temps
-* \param dt Le pas temporel de la simulation
+* @brief Met à jour les positions des particules après un pas de temps
+* @param dt Le pas temporel de la simulation
 */
 void Context::updateExpectedPosition(float dt){
     for (particle &p : particles) {
@@ -44,7 +46,7 @@ void Context::updateExpectedPosition(float dt){
 };
 
 /**
-* \brief Ajoute des contraintes statiques si un contact avec un collider et une particule est détecté
+* @brief Ajoute des contraintes statiques si un contact avec un collider et une particule est détecté
 */
 void Context::addStaticContactConstraints(){
     for (const auto &sc : colliders){
@@ -57,7 +59,7 @@ void Context::addStaticContactConstraints(){
 }
 
 /**
-* \brief Résoud les effets d'une contrainte statique en mettant à jour la nouvelle position future au niveau du point d'impact et la vitesse comme un rebond sur le collider
+* @brief Résoud les effets d'une contrainte statique en mettant à jour la nouvelle position future au niveau du point d'impact et la vitesse comme un rebond sur le collider
 */
 void enforceStaticGroundConstraint(const StaticConstraint& constraint,particle& particle){
 
@@ -72,7 +74,7 @@ void enforceStaticGroundConstraint(const StaticConstraint& constraint,particle& 
 }
 
 /**
-* \brief Résoud toutes les contraintes (statiques, entre particule, avec les bords)
+* @brief Résoud toutes les contraintes (statiques, entre particule, avec les bords)
 */
 void Context::projectConstraints(){
 
@@ -128,9 +130,27 @@ void Context::projectConstraints(){
 }
 
 /**
-* \brief Met à jour la position réelle des particules après dt
+* @brief Applique une force de frottement pour réduire la vitesse des particules
+*/
+void Context::applyFriction(){
+    for (particle &p:particles){
+        p.velocity[0]-=alpha*p.velocity[0];
+        p.velocity[1]-=alpha*p.velocity[1];
+    }
+};
+
+/**
+*@brief Supprime les contraintes de contact
+*/
+void Context::deleteContactConstraints(){
+    S_Constraints.clear();
+};
+
+
+/**
+* @brief Met à jour la position réelle des particules après dt
 * A faire: mettre à jour la vitesse comme 1/dt * (p_future-p_init) avant.
-* \param dt Le pas temporel de la simulation
+* @param dt Le pas temporel de la simulation
 */
 void Context::updateVelocityAndPosition(float dt){
     for (particle &p : particles) {
@@ -138,8 +158,5 @@ void Context::updateVelocityAndPosition(float dt){
     }
 };
 
-/* Non implémentées:
-void Context::dampVelocities(float dt){};
-void Context::addDynamicContactConstraints(float dt){};
-void Context::applyFriction(float dt){};
-void Context::deleteContactConstraints(){};*/
+/* Non implémentée:
+void Context::addDynamicContactConstraints(float dt){};*/
