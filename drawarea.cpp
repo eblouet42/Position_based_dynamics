@@ -130,7 +130,8 @@ void DrawArea::mouseDoubleClickEvent(QMouseEvent *event) {
     // On récupère la position de la souris
     newParticle.pos={(double)event->position().x(),(double)event->position().y()};
     newParticle.future_pos={0,0};
-    newParticle.velocity={10,-20};
+    newParticle.velocity={30,-40};
+    newParticle.future_velocity={0,0};
     newParticle.radius=radius;
     newParticle.mass=2;
     context.particles.push_back(newParticle);
@@ -147,7 +148,7 @@ void DrawArea::mouseDoubleClickEvent(QMouseEvent *event) {
 /**
 * @brief Actualise le contexte après un certain pas de temps à l'aide de la méthode updatePhysicalSystem de Context.h
 */
-void DrawArea::animate() {
+void DrawArea::animate(){
     context.updatePhysicalSystem(((double) timer->interval())/100);
     // Méthode magique qui fait que toutes les méthodes se relancent
     update();

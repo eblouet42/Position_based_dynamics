@@ -30,13 +30,14 @@ public:
     std::vector<double> champ_de_force; /**< Vecteur représentant un champ de force */
     double alpha; /**< Coefficient de frottement dynamique*/
     std::vector<StaticConstraint> S_Constraints; /**< Vecteur contenant les contraintes statiques ajoutées lors de la méthode addStaticContactConstraints pour les utiliser dans la méthode enforceStaticGroundConstraint du fichier context.cpp */
+    std::vector<DynamicConstraint> D_Constraints; /**< Vecteur contenant les contraintes dynamiques ajoutées lors de la méthode addDynamicContactConstraints pour les utiliser dans la méthode enforceDynamicGroundConstraint du fichier context.cpp */
     int width; /**< Largeur de l'environnement*/
     int height; /**< Longueur de l'environnment*/
 
     /**
      * @brief Constructeur par défaut.
      */
-    Context(){particles={},colliders={},champ_de_force={0,0},alpha=0.003,S_Constraints={},width=0,height=0;}
+    Context(){particles={},colliders={},champ_de_force={0,0},alpha=0.003,S_Constraints={},D_Constraints={},width=0,height=0;}
 
     /**
      * @brief Méthode pour ajouter un collider au vecteur de colliders.
@@ -67,6 +68,12 @@ public:
      */
     void addStaticContactConstraints();
 
+
+    /**
+     * @brief Ajoute des contraintes dynamiques si un contact entre deux particules est détecté
+     */
+    void addDynamicContactConstraints();
+
     /**
     * @brief Résoud toutes les contraintes (statiques, entre particule, avec les bords)
     */
@@ -84,16 +91,11 @@ public:
     void deleteContactConstraints();
 
     /**
-     * @brief Met à jour la position réelle des particules après dt
+     * @brief Met à jour la position réelle et la vitesse réelle des particules après dt
      * A faire: mettre à jour la vitesse comme 1/dt * (p_future-p_init) avant.
      * @param dt Le pas temporel de la simulation
      */
     void updateVelocityAndPosition(float dt);
-
-
-
-    /* Non implémentée:
-    void addDynamicContactConstraints(float dt);*/
 };
 
 #endif // CONTEXT_H

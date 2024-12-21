@@ -26,7 +26,7 @@ class DrawArea : public QOpenGLWidget {
 private:
     Context context=Context(); /**< Contexte de la simulation*/
     double radius=10; /**< Rayon des particules ajoutées */
-    double gravity=9.81; /**< Valeur de la gravité, agissant sur le champ de force initial */
+    double gravity=0.981; /**< Valeur de la gravité, agissant sur le champ de force initial */
     QTimer *timer;    /**< Timer pour le pas de temps */
 
 public:

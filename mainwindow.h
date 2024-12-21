@@ -22,7 +22,7 @@ QT_END_NAMESPACE
  * @class MainWindow
  * @brief Classe pour représenter la fenêtre de l'application
  *
- * Cette classe l'architecture de la fenêtre de l'application avec une partie UI et une partie simulation
+ * Cette classe définit l'architecture de la fenêtre de l'application avec une partie UI et une partie simulation
  */
 class MainWindow : public QMainWindow
 {
