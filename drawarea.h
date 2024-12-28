@@ -24,13 +24,12 @@ class DrawArea : public QOpenGLWidget {
     Q_OBJECT //je sais pas ce que c'est mais c'est là
 
 private:
-    Context context=Context(); /**< Contexte de la simulation*/
     double radius=10; /**< Rayon des particules ajoutées */
-    double gravity=9.81/2; /**< Valeur de la gravité, agissant sur le champ de force initial */
-    double alpha=0.003; /**< Coefficient de frottement linéaire */
     QTimer *timer;    /**< Timer pour le pas de temps */
 
 public:
+    Context context=Context(); /**< Contexte de la simulation*/
+
     /**
     * @brief Constructeur par défaut "explicite".
     * Relie le timeout du timer à la méthode animate sur le DrawArea

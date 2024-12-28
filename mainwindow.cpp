@@ -16,12 +16,14 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Connecte le bouton "Rattatas" avec le text pour afficher "UwU?"
-    QObject::connect(ui->start_button, &QPushButton::pressed, ui->label, [this](){(*ui->label).setText("UwU?");});
-
     // Créer un objet DrawArea pour la simulation et l'ajouter dans l'UI
     this->draw_area = new DrawArea();
     ui->verticalLayout->addWidget(draw_area);
+
+    QObject::connect(ui->resetButton, &QPushButton::pressed, &draw_area->context, &Context::resetSimulation);
+    QObject::connect(ui->frictionButton, &QPushButton::pressed, &draw_area->context, &Context::frictionTrigger);
+    QObject::connect(ui->gravityButton, &QPushButton::pressed, &draw_area->context, &Context::gravityChange);
+
 }
 
 /**
