@@ -11,6 +11,7 @@
 #define CONTEXT_H
 
 #include <memory>
+#include <qobject.h>
 #include <vector>
 #include "collider.h"
 
@@ -23,7 +24,11 @@
  * un champ de force, un coefficient de frottement, des contraintes statiques, une hauteur et une largeur de l'environnement.
  * Elle implémente toutes les méthodes pour actualiser la situation à chaque pas temporel
  */
-class Context {
+class Context :public QObject{
+    Q_OBJECT
+private:
+    double gravity_value=9.81/2; /**< Valeur de la gravité, agissant sur le champ de force initial */
+    double alpha_value=0.003; /**< Valeur du coefficient de frottement linéaire appliqué*/
 public:
     std::vector<particle> particles; /**< Vecteur de particules */
     std::vector<std::shared_ptr<collider>> colliders; /**< Vecteur de colliders. L'ampoul magique a forcé l'utilisation de shared_ptr: à expliquer... */
@@ -37,7 +42,7 @@ public:
     /**
      * @brief Constructeur par défaut.
      */
-    Context(){particles={},colliders={},champ_de_force={0,0},alpha=0,S_Constraints={},D_Constraints={},width=0,height=0;}
+    Context(){particles={},colliders={},champ_de_force={0,gravity_value},alpha=alpha_value,S_Constraints={},D_Constraints={},width=0,height=0;}
 
     /**
      * @brief Méthode pour ajouter un collider au vecteur de colliders.
@@ -96,6 +101,10 @@ public:
      * @param dt Le pas temporel de la simulation
      */
     void updateVelocityAndPosition(float dt);
+
+    void resetSimulation(){particles={};}
+    void frictionTrigger(){if (alpha==0){alpha=alpha_value;}else{alpha=0;}}
+    void gravityChange(){if(champ_de_force.at(0)!=0){champ_de_force={0,-champ_de_force.at(0)};}else{champ_de_force={champ_de_force.at(1),0};}}
 };
 
 #endif // CONTEXT_H
